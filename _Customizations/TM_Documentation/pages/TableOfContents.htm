@@ -1,0 +1,106 @@
+﻿<script type="text/javascript">
+
+	TM.Documentation.TableOfContents = 
+		{
+				targetDiv			: "#TableOfContents"
+			,	show				: function()
+										{											
+											tableOfContents = $("<div>");
+											tableOfContents.append($("<h2>").append("Table Of Contents"));
+											var tmDocumentation = TM.WebServices.Data.library("TM Documentation")
+											
+											$.each(tmDocumentation.views, function() 
+												{ 
+													var topic = $("<p>");
+													topic.append(this.name);
+					
+													var items = $("<ul>");
+													$.each(this.guidanceItems, function(index,value)
+														{							
+															var guidanceItem= $.data[value];
+                                                            
+															if(isDefined(guidanceItem) && guidanceItem.phase != "Draft")
+															{
+																var item = $("<li>");
+																_gi = guidanceItem;
+																var link = $("<a>").attr("href","#")
+																				   .append(guidanceItem.title)
+																				   .click(function() 
+																						{
+																							TM.Documentation.GuidanceItems.show(guidanceItem.title, guidanceItem.guidanceItemId);
+																						});
+																item.append(link);
+																items.append(item);
+															}
+														});
+													topic.append(items);
+													tableOfContents.append(topic);
+													_item = this;
+												} );
+			
+			
+
+											$(TM.Documentation.TableOfContents.targetDiv).html(tableOfContents);
+
+											//$(TM.Documentation.TableOfContents.targetDiv).open(tableOfContents);
+			
+											$(TM.Documentation.TableOfContents.targetDiv + " a").css("font-size","14px")
+											$(TM.Documentation.TableOfContents.targetDiv + " h2").relative().left(-30)
+										}
+			//,	show				: function()
+
+		}
+
+	TM.Documentation.GuidanceItems =
+		{
+				targetDiv			: "#PageContent"
+			,	show				: function(title, guid)
+										{		                                            								
+											getGuidanceItemHtml(guid, function(data) 
+												{
+													var guidanceItemHtml = $("<div>");
+													guidanceItemHtml.append($("<h2>").append(title));
+													guidanceItemHtml.append($("<div id='selectedGuidanceItem' class='ItemContent'>").html(data.d));                                                    
+
+/*													guidanceItemHtml.append($("<hr>"))
+																	.append("Back to ")
+																	.append($("<a>").attr("href","#")
+																					.click(TM.Documentation.TableOfContents.show)
+																					.append("Table of Contents"));
+*/
+
+													$(TM.Documentation.GuidanceItems.targetDiv).html(guidanceItemHtml);
+													TM.Documentation.GuidanceItems.handleMediaWikiText();
+                                                    $(".ItemContent pre").addClass("prettyprint") ; 
+                                                    prettyPrint();      
+													//fix CSS
+													$(".ItemContent h1").css('font-size',18)
+													$(".ItemContent h2").css('font-size',14)
+
+                                                    my_Gauge.track("Documentation",title);   
+												});
+										}
+            ,   handleMediaWikiText         : function()
+                                                {                                                            
+                                                    var wikiTextDiv = $("#selectedGuidanceItem #tm_datatype_wikitext")
+                                                    
+                                                    if (wikiTextDiv.length ===1)              
+                                                      {
+                                                            var wikiText = wikiTextDiv.html();
+                                                            wikiText = wikiText.replace(/&lt;/, "<")
+                                                                               .replace(/&gt;/, ">")
+                                                                               .replace(/&amp;/, "&");  // deal with double encoding WikiText issue
+                                                            var targetDiv = document.createElement('div');        
+                                                            new creole().parse(targetDiv,wikiText )   
+                                                            var html = targetDiv.innerHTML ;
+              
+                                                        wikiTextDiv.html(html);      
+                                                     }
+                                                }
+		}
+
+	$(TM.Documentation.TableOfContents.show);
+</script>
+
+
+<div id="TableOfContents"></div>	
